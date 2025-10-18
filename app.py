@@ -99,8 +99,19 @@ def auto_initialize_system():
             st.session_state.system_ready = True
             return True
         except Exception as e:
-            st.session_state.system_ready = False
-            return False
+            # Fallback: Gemini başarısızsa Ollama ile deneyelim
+            try:
+                rag = RAGPipeline(model_provider="ollama")
+                rag.load_vectorstore()
+                rag.create_qa_chain(k=2)
+                st.session_state.rag_pipeline = rag
+                st.session_state.vectorstore_loaded = True
+                st.session_state.system_ready = True
+                st.session_state.selected_model = "ollama"
+                return True
+            except Exception:
+                st.session_state.system_ready = False
+                return False
     elif not os.path.exists("faiss_db"):
         st.session_state.system_ready = False
         return False
