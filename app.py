@@ -83,7 +83,7 @@ def initialize_session_state():
         st.session_state.system_ready = False
     
     if 'selected_model' not in st.session_state:
-        st.session_state.selected_model = "gemini"  # Varsayılan Gemini
+        st.session_state.selected_model = "ollama"  # Varsayılan Ollama (lokal)
 
 
 def auto_initialize_system():
