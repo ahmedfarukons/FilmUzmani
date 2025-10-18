@@ -79,42 +79,35 @@ def initialize_session_state():
     if 'vectorstore_loaded' not in st.session_state:
         st.session_state.vectorstore_loaded = False
     
-    if 'api_key_configured' not in st.session_state:
-        st.session_state.api_key_configured = False
+    if 'system_ready' not in st.session_state:
+        st.session_state.system_ready = False
     
-    if 'model_provider' not in st.session_state:
-        st.session_state.model_provider = "ollama"
+    if 'selected_model' not in st.session_state:
+        st.session_state.selected_model = "gemini"  # Varsayılan Gemini
 
 
-def load_rag_pipeline(model_provider: str, groq_api_key: str = None):
-    """RAG Pipeline'ı yükler"""
-    try:
-        with st.spinner("🔄 RAG sistemi yükleniyor..."):
-            # Model provider'a göre pipeline oluştur
-            rag = RAGPipeline(
-                model_provider=model_provider,
-                groq_api_key=groq_api_key
-            )
-            
-            # Veritabanı kontrolü
-            if os.path.exists("chroma_db"):
-                rag.load_vectorstore()
-                rag.create_qa_chain(k=4)
-                st.session_state.vectorstore_loaded = True
-                st.session_state.rag_pipeline = rag
-                st.session_state.model_provider = model_provider
-                st.success(f"✅ RAG sistemi başarıyla yüklendi! ({model_provider.upper()})")
-                return True
-            else:
-                st.warning("⚠️ Vektör veritabanı bulunamadı. Lütfen önce verileri işleyin.")
-                return False
-                
-    except Exception as e:
-        st.error(f"❌ RAG sistemi yüklenirken hata: {str(e)}")
+def auto_initialize_system():
+    """Sistem açılışında otomatik olarak RAG'i yükle"""
+    if os.path.exists("faiss_db") and not st.session_state.vectorstore_loaded:
+        try:
+            # Seçili modelle RAG başlat
+            rag = RAGPipeline(model_provider=st.session_state.selected_model)
+            rag.load_vectorstore()
+            rag.create_qa_chain(k=2)  # Daha hızlı için 2
+            st.session_state.rag_pipeline = rag
+            st.session_state.vectorstore_loaded = True
+            st.session_state.system_ready = True
+            return True
+        except Exception as e:
+            st.session_state.system_ready = False
+            return False
+    elif not os.path.exists("faiss_db"):
+        st.session_state.system_ready = False
         return False
+    return st.session_state.vectorstore_loaded
 
 
-def process_data(model_provider: str, groq_api_key: str = None):
+def process_data():
     """Veri işleme ve vektör veritabanı oluşturma"""
     try:
         with st.spinner("📊 Veriler işleniyor..."):
@@ -136,20 +129,18 @@ def process_data(model_provider: str, groq_api_key: str = None):
             st.info(f"📄 {len(documents)} chunk oluşturuldu")
             
         with st.spinner("🔨 Vektör veritabanı oluşturuluyor..."):
-            # RAG pipeline oluştur
-            rag = RAGPipeline(
-                model_provider=model_provider,
-                groq_api_key=groq_api_key
-            )
+            # RAG pipeline oluştur (seçili model ile)
+            rag = RAGPipeline(model_provider=st.session_state.selected_model)
             
             # Vektör veritabanı oluştur
             rag.create_vectorstore(documents)
             
-            # QA zinciri oluştur
-            rag.create_qa_chain(k=4)
+            # QA zinciri oluştur (k=2 daha hızlı)
+            rag.create_qa_chain(k=2)
             
             st.session_state.rag_pipeline = rag
             st.session_state.vectorstore_loaded = True
+            st.session_state.system_ready = True
             
             st.success(f"✅ Vektör veritabanı başarıyla oluşturuldu! ({len(documents)} chunk)")
             return True
@@ -182,102 +173,82 @@ def main():
     # Session state başlat
     initialize_session_state()
     
+    # Otomatik sistem başlatma
+    auto_initialize_system()
+    
     # Başlık
     st.markdown("<h1>🎬 Film Gurusu</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>RAG Tabanlı Film Eleştiri Chatbot'u</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>RAG Tabanlı Film Eleştiri Chatbot'u - Tamamen Lokal</p>", unsafe_allow_html=True)
     
-    # Sidebar - Ayarlar
+    # Sidebar - Kontrol Paneli
     with st.sidebar:
-        st.header("⚙️ Ayarlar")
+        st.header("🤖 Model Seçimi")
         
-        # API Key'leri .env'den otomatik yükle
-        load_dotenv()
-        groq_api_key = os.getenv('GROQ_API_KEY')
-        
-        # Model Seçimi
-        st.subheader("🤖 Model Seçimi")
-        model_provider = st.selectbox(
-            "LLM Provider",
-            ["ollama", "groq"],
-            index=0,  # Ollama varsayılan (lokal)
-            help="Hangi AI modelini kullanmak istiyorsunuz?"
+        # Model seçici
+        new_model = st.radio(
+            "LLM Modeli:",
+            options=["gemini", "ollama"],
+            format_func=lambda x: "🚀 Gemini 1.5 Flash (Hızlı)" if x == "gemini" else "🏠 Ollama Phi-3 (Lokal)",
+            index=0 if st.session_state.selected_model == "gemini" else 1,
+            help="Gemini: Hızlı ve güçlü (API key gerekli)\nOllama: Tamamen lokal (yavaş olabilir)"
         )
         
-        # Model bilgileri ve API key durumu
-        if model_provider == "ollama":
-            st.info("🏠 **Ollama - Phi-3 Mini (3.8B)**\n- Tamamen LOKAL\n- API key gerektirmez\n- Offline çalışır\n- CPU'da hızlı")
-            st.success("✅ Ollama: Lokal (API key gerekmez)")
-            keys_configured = True  # Ollama için API key gerekmez
-            
-        elif model_provider == "groq":
-            st.info("⚡ **Groq - Llama 3.2 90B**\n- Çok hızlı\n- Ücretsiz kuota\n- Türkçe desteği mükemmel")
-            if groq_api_key:
-                st.success("✅ Groq API: Aktif")
-                keys_configured = True
-            else:
-                st.warning("⚠️ Groq API key bulunamadı (.env dosyasına GROQ_API_KEY ekleyin)")
-                st.info("🔗 API key almak için: https://console.groq.com/keys")
-                keys_configured = False
+        # Model değiştiyse sistemi resetle
+        if new_model != st.session_state.selected_model:
+            st.session_state.selected_model = new_model
+            st.session_state.vectorstore_loaded = False
+            st.session_state.system_ready = False
+            st.session_state.rag_pipeline = None
+            st.info("🔄 Model değişti, sistem yeniden başlatılıyor...")
+            st.rerun()
         
-        st.session_state.api_key_configured = keys_configured
+        # API key kontrolü (sadece Gemini için)
+        if st.session_state.selected_model == "gemini":
+            load_dotenv()
+            gemini_key = os.getenv('GEMINI_API_KEY')
+            if not gemini_key:
+                st.error("⚠️ GEMINI_API_KEY bulunamadı!")
+                st.info("📝 .env dosyasına ekleyin:\n```\nGEMINI_API_KEY=your_key_here\n```")
+            else:
+                st.success("✅ API Key: " + gemini_key[:8] + "...")
         
         st.divider()
         
-        # RAG sistemi yükleme
-        st.header("🚀 Sistem Kontrolü")
+        st.header("📊 Sistem Durumu")
         
-        if keys_configured:
-            # RAG sistemi yükleme butonu
-            if not st.session_state.vectorstore_loaded:
-                if st.button("🚀 RAG Sistemini Başlat"):
-                    success = load_rag_pipeline(model_provider, groq_api_key)
-                    if not success:
-                        st.info("💡 Vektör veritabanı yoksa, önce 'Verileri İşle' butonuna tıklayın")
-            else:
-                current_model = st.session_state.model_provider.upper()
-                st.success(f"✅ RAG sistemi aktif ({current_model})")
-                
-                # Model değişikliği kontrolü
-                if st.session_state.model_provider != model_provider:
-                    st.warning(f"⚠️ Model değişti! Yeniden başlatın.")
-                    if st.button("🔄 Modeli Değiştir"):
-                        st.session_state.vectorstore_loaded = False
-                        st.rerun()
+        # Sistem durumu göstergesi
+        if st.session_state.system_ready and st.session_state.vectorstore_loaded:
+            st.success("🟢 **Sistem Hazır**")
+            model_name = "Gemini 1.5 Flash" if st.session_state.selected_model == "gemini" else "Ollama Phi-3 Mini"
+            st.info(f"🤖 **Model:** {model_name}\n💾 **Vektör DB:** FAISS (Aktif)")
+        elif os.path.exists("faiss_db") and not st.session_state.vectorstore_loaded:
+            st.warning("🟡 **Yükleniyor...**")
+            if st.button("🔄 Yeniden Yükle"):
+                st.session_state.vectorstore_loaded = False
+                st.rerun()
         else:
-            st.warning("⚠️ Groq kullanmak için API key gerekli")
+            st.error("🔴 **Veritabanı Yok**")
+            st.info("💡 Önce verileri işleyin")
         
         st.divider()
         
-        # Veri işleme bölümü
+        # Veri İşleme
         st.header("📚 Veri Yönetimi")
+        if st.button("🔄 Verileri İşle / Güncelle"):
+            if process_data():
+                st.rerun()
         
-        if keys_configured:
-            if st.button("🔄 Verileri İşle"):
-                if process_data(model_provider, groq_api_key):
-                    st.rerun()
-            
-            st.caption("💡 Yeni veri eklediyseniz, bu butona tıklayarak veritabanını güncelleyin.")
-        else:
-            st.warning("⚠️ Groq kullanmak için API key gerekli")
+        st.caption("💡 Yeni veri eklediyseniz bu butona tıklayın")
         
         st.divider()
         
-        # Sohbet temizleme
+        # Sohbet Kontrolü
         st.header("💬 Sohbet")
         if st.button("🗑️ Sohbeti Temizle"):
             st.session_state.messages = []
             st.rerun()
         
-        st.divider()
-        
-        # İstatistikler
-        st.header("📊 İstatistikler")
         st.metric("Mesaj Sayısı", len(st.session_state.messages))
-        
-        if st.session_state.vectorstore_loaded:
-            st.success("🟢 Veritabanı: Aktif")
-        else:
-            st.error("🔴 Veritabanı: Pasif")
         
         st.divider()
         
@@ -286,51 +257,39 @@ def main():
         st.markdown("""
         **Film Gurusu Chatbot**
         
-        Bu chatbot, RAG (Retrieval-Augmented Generation) 
-        teknolojisi kullanarak film eleştirileri üzerine 
-        sorularınızı yanıtlar.
+        RAG teknolojisiyle film eleştirileri 
+        üzerine sorularınızı yanıtlar.
         
         **Teknolojiler:**
-        - 🤖 Ollama (Phi-3 Mini) / Groq (Llama 3.2 90B)
+        - 🤖 Gemini / Ollama
         - 🔗 LangChain
-        - 💾 ChromaDB (Vektör DB)
+        - 💾 FAISS Vektör DB
         - 🎨 Streamlit
-        - 🧠 Custom Transformers (Lokal Embedding)
+        - 🧠 Transformers Embeddings
+        
+        **Hybrid Model Desteği!**
         
         ---
-        *Akbank GenAI Bootcamp*  
-        *Yeni Nesil Proje Kampı*
+        *Akbank GenAI Bootcamp*
         """)
     
     # Ana içerik - Chat arayüzü
-    if not st.session_state.api_key_configured:
-        st.warning("⚠️ API Key gerekli!")
-        st.info("📝 Groq kullanmak için `.env` dosyasına API key ekleyin:")
-        st.code("""
-# .env dosyası
-GROQ_API_KEY=your_groq_api_key_here
-        """, language="bash")
-        st.info("🔗 Ücretsiz Groq API key almak için: https://console.groq.com/keys")
-        st.divider()
-        st.success("💡 **Veya Ollama kullanın** (API key gerekmez, tamamen lokal!)")
-        st.info("Sol panelden 'ollama' seçeneğini seçin ve direkt başlayın.")
+    if not st.session_state.vectorstore_loaded:
+        st.warning("⚠️ Vektör veritabanı bulunamadı!")
+        st.info("💡 Sol panelden '🔄 Verileri İşle / Güncelle' butonuna tıklayın.")
         
-        # Örnek sorular
+        # Örnek sorular göster
         st.subheader("💡 Hazır Olunca Sorabilecekleriniz:")
         example_questions = [
             "Christopher Nolan'ın hangi filmleri hakkında eleştiri var?",
             "En iyi puan alan filmler hangileri?",
-            "Parasite filmi hakkında ne söyleniyor?",
             "Duygusal filmler önerir misin?",
-            "Hangi filmler sosyal eleştiri içeriyor?"
+            "Hangi filmler sosyal eleştiri içeriyor?",
+            "Aksiyon filmleri öner"
         ]
         
         for question in example_questions:
             st.markdown(f"- {question}")
-    
-    elif not st.session_state.vectorstore_loaded:
-        st.warning("⚠️ RAG sistemi henüz yüklenmedi. Lütfen sol panelden '🚀 RAG Sistemini Başlat' butonuna tıklayın.")
-        st.info("💡 Eğer vektör veritabanı yoksa, önce '🔄 Verileri İşle' butonuna tıklayın.")
     
     else:
         # Chat geçmişini göster
@@ -386,9 +345,6 @@ GROQ_API_KEY=your_groq_api_key_here
 
 
 if __name__ == "__main__":
-    # .env dosyasını yükle
-    load_dotenv()
-    
     # Uygulamayı çalıştır
     main()
 

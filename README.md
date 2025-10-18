@@ -2,13 +2,12 @@
 
 **Akbank GenAI Bootcamp - Yeni Nesil Proje Kampı**
 
-RAG (Retrieval-Augmented Generation) teknolojisi kullanan, film eleştirileri üzerine akıllı sohbet edebilen chatbot uygulaması.
+RAG (Retrieval-Augmented Generation) teknolojisi kullanan, film yorumları üzerine akıllı sohbet edebilen **tamamen lokal** chatbot uygulaması.
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.31.0-red)
 ![LangChain](https://img.shields.io/badge/LangChain-0.1.9-green)
 ![Ollama](https://img.shields.io/badge/Ollama-Lokal-purple)
-![Groq](https://img.shields.io/badge/Groq-Llama%203.2-orange)
 
 ## 📋 İçindekiler
 
@@ -17,62 +16,58 @@ RAG (Retrieval-Augmented Generation) teknolojisi kullanan, film eleştirileri ü
 - [Teknolojiler](#teknolojiler)
 - [Kurulum](#kurulum)
 - [Kullanım](#kullanım)
+- [IMDb Dataset](#imdb-dataset)
 - [Proje Yapısı](#proje-yapısı)
 - [RAG Mimarisi](#rag-mimarisi)
-- [Ekran Görüntüleri](#ekran-görüntüleri)
-- [Geliştirme](#geliştirme)
-- [Katkıda Bulunma](#katkıda-bulunma)
 
 ## 🎯 Proje Hakkında
 
-Film Gurusu, kullanıcıların film eleştirileri hakkında sorular sorabileceği ve detaylı, bağlama dayalı cevaplar alabileceği bir yapay zeka chatbot'udur. Proje, RAG (Retrieval-Augmented Generation) mimarisini kullanarak, önce ilgili bilgileri bir vektör veritabanından alır, sonra bu bilgileri kullanarak **Ollama (tamamen lokal)** veya **Groq (Llama 3.2 90B)** ile zenginleştirilmiş cevaplar üretir.
+Film Gurusu, kullanıcıların film yorumları hakkında sorular sorabileceği ve detaylı, bağlama dayalı cevaplar alabileceği bir yapay zeka chatbot'udur. Proje, RAG (Retrieval-Augmented Generation) mimarisini kullanarak, önce ilgili bilgileri bir vektör veritabanından alır, sonra bu bilgileri kullanarak **Ollama (Phi-3 Mini)** ile zenginleştirilmiş cevaplar üretir.
 
-### Projenin Amacı
+### 🔥 Neden Tamamen Lokal?
 
-Bu proje, modern NLP ve LLM teknolojilerini kullanarak:
-- Film eleştirilerinden oluşan bir bilgi havuzunu anlamsal olarak indexleme
-- Kullanıcı sorularına bağlam-farkındalı cevaplar verme
-- RAG mimarisinin pratik bir uygulamasını gösterme
-- Web tabanlı kullanıcı dostu bir arayüz sunma
+- ✅ **Ücretsiz**: API key gerekmez, maliyet yok
+- ✅ **Hızlı**: Network latency yok
+- ✅ **Güvenli**: Verileriniz sunucunuza çıkmaz
+- ✅ **Offline**: İnternet bağlantısı gerekmez
+- ✅ **Sınırsız**: Sorgu limiti yok
 
 ## ✨ Özellikler
 
 - 🤖 **RAG Tabanlı Cevaplama**: Retrieval-Augmented Generation ile akıllı cevaplar
-- 💬 **Doğal Dil İşleme**: Türkçe dilinde doğal konuşma desteği
-- 🎨 **Modern Web Arayüzü**: Streamlit ile geliştirilmiş kullanıcı dostu tasarım
+- 🏠 **Tamamen Lokal**: Ollama ile internet gerektirmeden çalışır
+- 💬 **Doğal Dil İşleme**: Türkçe ve İngilizce doğal konuşma desteği
+- 🎨 **Modern Web Arayüzü**: Streamlit ile kullanıcı dostu tasarım
 - 📚 **Kaynak Gösterimi**: Cevapların hangi kaynaklardan geldiğini gösterme
 - 🔍 **Semantik Arama**: ChromaDB ile anlamsal benzerlik araması
-- ⚡ **Hızlı Yanıt**: Optimize edilmiş vektör araması ve caching
-- 📊 **Chunk Yönetimi**: Akıllı metin bölümleme (chunking) sistemi
-- 🔐 **Güvenli API Yönetimi**: Environment variables ile güvenli yapılandırma
+- ⚡ **Otomatik Başlatma**: Uygulamayı açtığınızda sistem hazır
+- 📊 **50K IMDb Yorumu**: Zengin ve çeşitli film veri seti
 
 ## 🛠️ Teknolojiler
 
 ### Backend
 - **Python 3.8+**: Ana programlama dili
 - **LangChain**: RAG pipeline ve zincir yönetimi
-- **Ollama (Phi-3 Mini)**: Lokal LLM - API key gerektirmez
-- **Groq (Llama 3.2 90B)**: Cloud LLM - Ücretsiz ve çok hızlı
+- **Ollama (Phi-3 Mini 3.8B)**: Lokal LLM - API key gerektirmez
 - **ChromaDB**: Vektör veritabanı
-- **Transformers**: Custom lokal embedding (all-MiniLM-L6-v2)
+- **Transformers**: Lokal embedding (all-MiniLM-L6-v2)
 
 ### Frontend
 - **Streamlit**: Web arayüzü framework'ü
 - **Custom CSS**: Özel tasarım ve stilizasyon
 
-### Diğer
-- **python-dotenv**: Environment variables yönetimi
-- **PyPDF2**: PDF okuma desteği (opsiyonel)
-- **pandas**: Veri manipülasyonu
+### Dataset
+- **IMDb 50K Reviews**: Kaggle'dan public dataset
+- **Pandas**: Veri işleme
 
 ## 📦 Kurulum
 
 ### Gereksinimler
 
 - Python 3.8 veya üzeri
-- **Seçenek 1 (Önerilen):** Ollama kurulu ([buradan indirin](https://ollama.com/download)) - Tamamen ücretsiz ve lokal
-- **Seçenek 2:** Groq API Key ([buradan alın](https://console.groq.com/keys)) - Ücretsiz kuota
+- Ollama ([buradan indirin](https://ollama.com/download))
 - 4GB+ RAM (ChromaDB ve model için)
+- Kaggle hesabı (dataset için)
 
 ### Adım 1: Projeyi Klonlayın
 
@@ -99,9 +94,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Adım 4: Model Seçimi
-
-**Seçenek 1: Ollama (Önerilen - Tamamen Ücretsiz & Lokal)**
+### Adım 4: Ollama Kurulumu
 
 1. Ollama'yı indirin: https://ollama.com/download
 2. Phi-3 modelini çekin:
@@ -112,31 +105,25 @@ ollama pull phi3:mini
 ```bash
 ollama serve
 ```
-4. Artık hazırsınız! API key gerekmez.
 
-**Seçenek 2: Groq (Cloud - Ücretsiz & Hızlı)**
+### Adım 5: Kaggle API Yapılandırması
 
-1. `.env` dosyası oluşturun ve Groq API key'inizi ekleyin:
-```bash
-echo "GROQ_API_KEY=your_groq_api_key_here" > .env
-```
-2. Ücretsiz API key almak için: https://console.groq.com/keys
+1. Kaggle hesabınızdan API token indirin:
+   - https://www.kaggle.com/account
+   - "Create New API Token" butonuna tıklayın
+2. `kaggle.json` dosyasını şu konuma koyun:
+   - **Windows**: `C:\Users\YourUsername\.kaggle\kaggle.json`
+   - **Linux/Mac**: `~/.kaggle/kaggle.json`
 
-### Adım 5: Veritabanını Oluşturun
-
-İlk kez çalıştırmadan önce, vektör veritabanını oluşturmanız gerekir:
+### Adım 6: IMDb Dataset'i İndirin ve İşleyin
 
 ```bash
-python setup.py
-```
+# Dataset'i indir (50K IMDb yorumu)
+python scripts/download_imdb_dataset.py
 
-Bu script:
-- ✅ API key kontrolü yapacak
-- ✅ Veri dosyalarını kontrol edecek
-- ✅ Metinleri chunk'lara böler
-- ✅ Embedding'leri oluşturacak
-- ✅ ChromaDB veritabanını kuracak
-- ✅ Bir test sorgusu çalıştıracak
+# Dataset'i işle ve metin dosyalarına dönüştür
+python scripts/process_imdb_dataset.py
+```
 
 ## 🚀 Kullanım
 
@@ -150,88 +137,124 @@ Tarayıcınızda otomatik olarak `http://localhost:8501` adresi açılacaktır.
 
 ### İlk Kullanım
 
-1. **Model Seçin**: Sol panelden "ollama" veya "groq" seçin
-2. **RAG Sistemi Başlatın**: "🚀 RAG Sistemini Başlat" butonuna tıklayın
-   - İlk kullanımda "🔄 Verileri İşle" butonuna tıklayın (embedding modeli indirilir)
+1. **Sistem Otomatik Başlar**: Uygulama açıldığında RAG sistemi otomatik olarak hazırlanır
+2. **Veritabanı Yoksa**: Sol panelden "🔄 Verileri İşle / Güncelle" butonuna tıklayın
 3. **Soru Sorun**: Chat alanından filmler hakkında sorular sorun!
 
 ### Örnek Sorular
 
 ```
-🎬 Christopher Nolan'ın hangi filmleri hakkında eleştiri var?
-🎬 En yüksek puan alan filmler hangileri?
-🎬 Parasite filmi hakkında ne düşünülüyor?
-🎬 Duygusal ve derin bir film önerir misin?
-🎬 Sosyal eleştiri içeren filmler hangileri?
-🎬 Tim Robbins hangi filmlerde oynadı?
+🎬 En iyi aksiyon filmleri hangileri?
+🎬 Duygusal ve derin filmler öner
+🎬 Komedi filmleri hakkında ne söyleniyor?
+🎬 Korku filmi önerisi
+🎬 Hangi filmler çok beğenilmiş?
+🎬 Leonardo DiCaprio'nun iyi filmleri
+```
+
+## 📊 IMDb Dataset
+
+### Dataset Hakkında
+
+- **Kaynak**: [IMDb Dataset of 50K Movie Reviews - Kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
+- **Boyut**: 50,000 film yorumu
+- **Dil**: İngilizce
+- **Sentiment**: 25K pozitif, 25K negatif yorum
+- **Format**: Her yorum ayrı chunk'larda, semantik arama için optimize edilmiş
+
+### Dataset Yapısı
+
+İndirilen ve işlenen dataset şu formattadır:
+
+```
+data/
+├── backup/
+│   └── sample_reviews_backup.txt    # Eski örnek veriler
+├── imdb_reviews_01.txt              # 5000 yorum
+├── imdb_reviews_02.txt              # 5000 yorum
+├── ...
+└── imdb_reviews_10.txt              # 5000 yorum
+```
+
+Her dosya şu formatta yorumlar içerir:
+
+```
+Film Yorumu #1
+--------------------------------------------------------------------------------
+Değerlendirme: positive/negative
+
+[Yorum metni burada]
+
+================================================================================
 ```
 
 ## 📁 Proje Yapısı
 
 ```
-film-gurusu-chatbot/
+FilmUzmani/
 │
-├── app.py                      # Ana Streamlit web uygulaması
-├── setup.py                    # Kurulum ve veri işleme scripti
-├── requirements.txt            # Python bağımlılıkları
-├── .env.example               # Environment variables şablonu
-├── .gitignore                 # Git ignore dosyası
-├── README.md                  # Proje dokümantasyonu
+├── app.py                          # Ana Streamlit web uygulaması
+├── requirements.txt                # Python bağımlılıkları
+├── README.md                       # Proje dokümantasyonu
 │
-├── src/                       # Kaynak kod modülleri
+├── src/                            # Kaynak kod modülleri
 │   ├── __init__.py
-│   ├── data_processor.py      # Veri yükleme ve chunking
-│   └── rag_pipeline.py        # RAG pipeline ve QA sistemi
+│   ├── data_processor.py           # Veri yükleme ve chunking
+│   ├── rag_pipeline.py             # RAG pipeline (sadece Ollama)
+│   └── backup/
+│       └── multi_provider_rag_pipeline.py  # Eski multi-provider versiyonu
 │
-├── data/                      # Film eleştirileri veri seti
-│   └── sample_reviews.txt     # Örnek eleştiriler
+├── scripts/                        # Yardımcı scriptler
+│   ├── download_imdb_dataset.py    # Kaggle'dan dataset indir
+│   └── process_imdb_dataset.py     # CSV'yi metin dosyalarına dönüştür
 │
-└── chroma_db/                 # ChromaDB vektör veritabanı (otomatik oluşur)
-    └── ...
+├── data/                           # Film yorumları
+│   ├── imdb_reviews_*.txt          # İşlenmiş IMDb yorumları
+│   └── backup/                     # Eski veriler
+│
+└── chroma_db/                      # ChromaDB vektör veritabanı (otomatik)
 ```
 
 ## 🏗️ RAG Mimarisi
 
-### 1. Veri Hazırlama (Data Processing)
+### 1. Veri Hazırlama
 
-```python
-DataProcessor → Metin Dosyaları → Chunking → Document Nesneleri
+```
+IMDb CSV → Parse → Text Files → Chunking → Documents
 ```
 
 - **Chunk Size**: 1000 karakter
 - **Chunk Overlap**: 200 karakter
-- **Separators**: Paragraf, cümle, kelime bazlı ayırma
+- **Separators**: Paragraf, cümle, kelime bazlı
 
 ### 2. Embedding ve Vektörleştirme
 
-```python
-Documents → Custom Transformers (all-MiniLM-L6-v2) → Vektörler → ChromaDB
+```
+Documents → Transformers (all-MiniLM-L6-v2) → Vectors → ChromaDB
 ```
 
-- **Model**: `sentence-transformers/all-MiniLM-L6-v2` (Lokal)
+- **Model**: sentence-transformers/all-MiniLM-L6-v2 (Lokal)
 - **Vektör Boyutu**: 384 dimensions
-- **Veritabanı**: ChromaDB (persist)
+- **Veritabanı**: ChromaDB (persistent)
 
 ### 3. Retrieval (Bilgi Getirme)
 
-```python
-Kullanıcı Sorusu → Embedding → Similarity Search → Top-K Documents
+```
+User Query → Embedding → Similarity Search → Top-4 Documents
 ```
 
-- **Arama Tipi**: Similarity Search
+- **Arama Tipi**: Cosine similarity
 - **K Değeri**: 4 (en benzer 4 chunk)
-- **Similarity Metric**: Cosine similarity
 
 ### 4. Generation (Cevap Üretme)
 
-```python
-Soru + Retrieved Context → Ollama/Groq → Zenginleştirilmiş Cevap
+```
+Query + Context → Ollama Phi-3 Mini → Enriched Answer
 ```
 
-- **Ollama Model**: Phi-3 Mini (3.8B) - Lokal
-- **Groq Model**: Llama 3.2 90B - Cloud
+- **Model**: Phi-3 Mini (3.8B parameters)
 - **Temperature**: 0.7
-- **Chain Type**: Stuff (tüm context birlikte gönderilir)
+- **Lokal**: Tamamen offline çalışır
 
 ### RAG Pipeline Akışı
 
@@ -244,7 +267,7 @@ Soru + Retrieved Context → Ollama/Groq → Zenginleştirilmiş Cevap
          ▼
 ┌─────────────────┐
 │  Embedding      │
-│  (Soru → Vektör)│
+│  (Lokal)        │
 └────────┬────────┘
          │
          ▼
@@ -256,119 +279,85 @@ Soru + Retrieved Context → Ollama/Groq → Zenginleştirilmiş Cevap
          │
          ▼
 ┌─────────────────┐
-│  Top-K          │
-│  Dokümanlarsı   │
-│  Getir          │
+│  Top-4          │
+│  Chunks         │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
-│  Prompt         │
-│  Oluştur        │
-│  (Soru+Context) │
+│  Ollama         │
+│  Phi-3 Mini     │
+│  (Lokal)        │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
-│  Ollama/Groq    │
-│  LLM            │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Zenginleştiril-│
-│  miş Cevap      │
+│  Cevap          │
 └─────────────────┘
 ```
-
-## 🎨 Ekran Görüntüleri
-
-### Ana Ekran
-Web arayüzü modern, karanlık tema ile geliştirilmiştir ve kullanıcı dostu bir deneyim sunar.
-
-**Özellikler:**
-- 💬 Gerçek zamanlı chat arayüzü
-- 📚 Kaynak belge gösterimi
-- 📊 İstatistikler paneli
-- ⚙️ Kolay yapılandırma
 
 ## 🔧 Geliştirme
 
 ### Yeni Veri Ekleme
 
-1. Film eleştirilerinizi `data/` klasörüne `.txt` formatında ekleyin
-2. Setup scriptini yeniden çalıştırın:
-```bash
-python setup.py
-```
+1. Film yorumlarınızı `data/` klasörüne `.txt` formatında ekleyin
+2. Uygulamada "🔄 Verileri İşle / Güncelle" butonuna tıklayın
 
-### Chunk Parametrelerini Ayarlama
+### Parametreleri Ayarlama
 
-`src/data_processor.py` dosyasında:
-
+**Chunk Boyutu** (`src/data_processor.py`):
 ```python
-processor = DataProcessor(
-    chunk_size=1000,      # Chunk boyutu
-    chunk_overlap=200     # Overlap miktarı
-)
+processor = DataProcessor(chunk_size=1000, chunk_overlap=200)
 ```
 
-### Retrieval Parametrelerini Ayarlama
-
-`src/rag_pipeline.py` dosyasında:
-
+**Retrieval** (`src/rag_pipeline.py`):
 ```python
 rag.create_qa_chain(k=4)  # Döndürülecek chunk sayısı
 ```
 
-### LLM Parametrelerini Ayarlama
-
-**Ollama için:**
+**LLM** (`src/rag_pipeline.py`):
 ```python
 self.llm = ChatOllama(
     model="phi3:mini",
-    temperature=0.7,      # Yaratıcılık seviyesi (0.0-1.0)
+    temperature=0.7,  # 0.0-1.0 arası
     base_url="http://localhost:11434"
-)
-```
-
-**Groq için:**
-```python
-self.llm = ChatGroq(
-    model="llama-3.2-90b-text-preview",
-    temperature=0.7,
-    max_tokens=2048
 )
 ```
 
 ## 📝 Notlar
 
-### Performans İpuçları
+### Performans
 
-- **Chunk Size**: Çok küçük chunk'lar → fazla context kaybı, Çok büyük chunk'lar → ilgisiz bilgi
-- **Overlap**: Cümle bütünlüğünü korumak için önerilir
-- **K Değeri**: Fazla chunk → yavaş yanıt + maliyetli, Az chunk → bilgi eksikliği
+- **CPU**: Phi-3 Mini CPU'da iyi çalışır
+- **RAM**: Minimum 4GB, 8GB önerilir
+- **Disk**: ~10GB (model + embeddings + dataset)
 
-### API Maliyetleri
+### Alternatif Ollama Modelleri
 
-- **Ollama**: Tamamen ücretsiz (lokal çalışır, internet gerekmez)
-- **Groq**: Ücretsiz tier mevcut (hızlı yanıt)
-- **Embedding**: Lokal model, internet gerekmez, ücretsiz
+```bash
+# Daha küçük (daha hızlı)
+ollama pull phi3:mini
+
+# Daha büyük (daha iyi)
+ollama pull llama3.2:3b
+ollama pull gemma2:9b
+```
 
 ### Veri Gizliliği
 
-- API key'leri asla commit etmeyin
-- `.env` dosyası `.gitignore`'da olmalı
-- Hassas veriler için kendi sunucunuzu kullanın
+- ✅ Tüm işlemler lokal
+- ✅ API key gerekmez
+- ✅ Veriler sunucunuza çıkmaz
+- ✅ Tamamen offline çalışır
 
 ## 🤝 Katkıda Bulunma
 
-Katkılarınızı bekliyoruz! Lütfen şu adımları takip edin:
+Katkılarınızı bekliyoruz!
 
 1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'inizi push edin (`git push origin feature/AmazingFeature`)
+2. Feature branch oluşturun (`git checkout -b feature/Feature`)
+3. Commit edin (`git commit -m 'Add Feature'`)
+4. Push edin (`git push origin feature/Feature`)
 5. Pull Request açın
 
 ## 📄 Lisans
@@ -386,11 +375,11 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 
 - **Akbank GenAI Bootcamp** - Eğitim ve destek için
 - **Ollama** - Lokal LLM desteği için
-- **Groq** - Hızlı ve ücretsiz cloud LLM için
 - **LangChain** - RAG framework için
 - **Streamlit** - Web framework için
 - **ChromaDB** - Vektör veritabanı için
-- **HuggingFace** - Transformers ve model desteği için
+- **HuggingFace** - Transformers desteği için
+- **Kaggle** - IMDb dataset için
 
 ---
 
@@ -402,7 +391,6 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 
 - [LangChain Documentation](https://python.langchain.com/)
 - [Ollama Documentation](https://ollama.com/)
-- [Groq Documentation](https://console.groq.com/docs)
 - [ChromaDB Documentation](https://docs.trychroma.com/)
 - [Streamlit Documentation](https://docs.streamlit.io/)
 - [RAG Papers](https://arxiv.org/abs/2005.11401)
@@ -410,4 +398,3 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 ---
 
 *Bu proje Akbank GenAI Bootcamp kapsamında geliştirilmiştir. 🎓*
-

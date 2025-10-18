@@ -5,7 +5,7 @@ Bu kılavuz, Film Gurusu chatbot'unu adım adım nasıl kurup kullanacağınız�
 ## 📋 İçindekiler
 1. [Hızlı Başlangıç](#hızlı-başlangıç)
 2. [Detaylı Kurulum](#detaylı-kurulum)
-3. [İlk Çalıştırma](#ilk-çalıştırma)
+3. [IMDb Dataset İndirme](#imdb-dataset-indirme)
 4. [Web Arayüzü Kullanımı](#web-arayüzü-kullanımı)
 5. [Sorun Giderme](#sorun-giderme)
 6. [SSS](#sık-sorulan-sorular)
@@ -20,18 +20,22 @@ Bu kılavuz, Film Gurusu chatbot'unu adım adım nasıl kurup kullanacağınız�
 # 1. Bağımlılıkları yükleyin
 pip install -r requirements.txt
 
-# 2. .env dosyası oluşturun
-copy .env.example .env
-# (Linux/Mac: cp .env.example .env)
+# 2. Ollama'yı başlatın
+ollama serve
 
-# 3. .env dosyasını düzenleyin ve API key'inizi ekleyin
-notepad .env
-# GOOGLE_API_KEY=your_api_key_here
+# 3. Phi-3 modelini indirin
+ollama pull phi3:mini
 
-# 4. Veritabanını oluşturun
-python setup.py
+# 4. Kaggle API yapılandırın (IMDb dataset için)
+# kaggle.json dosyanızı ~/.kaggle/ klasörüne koyun
 
-# 5. Uygulamayı başlatın
+# 5. IMDb dataset'i indirin
+python scripts/download_imdb_dataset.py
+
+# 6. Dataset'i işleyin
+python scripts/process_imdb_dataset.py
+
+# 7. Uygulamayı başlatın
 streamlit run app.py
 ```
 
@@ -54,18 +58,36 @@ Eğer Python yüklü değilse:
 - Mac: `brew install python3`
 - Linux: `sudo apt install python3`
 
-### Adım 2: Google API Key Alın
+### Adım 2: Ollama Kurulumu
 
-1. [Google AI Studio](https://makersuite.google.com/app/apikey)'ya gidin
-2. Google hesabınızla giriş yapın
-3. "Create API Key" butonuna tıklayın
-4. API key'inizi kopyalayın (güvenli bir yerde saklayın!)
+1. **Ollama'yı İndirin**
+   - Windows/Mac/Linux: [https://ollama.com/download](https://ollama.com/download)
+
+2. **Phi-3 Mini Modelini Çekin**
+   ```bash
+   ollama pull phi3:mini
+   ```
+   
+   İndirme boyutu: ~2.3GB
+
+3. **Ollama Servisini Başlatın**
+   ```bash
+   ollama serve
+   ```
+   
+   Port: `http://localhost:11434`
+
+4. **Kontrol Edin**
+   ```bash
+   ollama list
+   # phi3:mini görünmeli
+   ```
 
 ### Adım 3: Projeyi Hazırlayın
 
 ```bash
 # Proje klasörüne gidin
-cd film-gurusu-chatbot
+cd FilmUzmani
 
 # Virtual environment oluşturun (önerilen)
 python -m venv venv
@@ -80,74 +102,69 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Adım 4: Environment Variables
+### Adım 4: Kaggle API Yapılandırması
 
-`.env` dosyası oluşturun:
+IMDb dataset'i için Kaggle API gerekli:
 
-```bash
-# Windows
-copy .env.example .env
+1. **Kaggle Hesabı Oluşturun**
+   - [https://www.kaggle.com](https://www.kaggle.com)
 
-# Mac/Linux
-cp .env.example .env
-```
+2. **API Token İndirin**
+   - [https://www.kaggle.com/account](https://www.kaggle.com/account)
+   - "Create New API Token" butonuna tıklayın
+   - `kaggle.json` dosyası indirilecek
 
-`.env` dosyasını düzenleyin:
-
-```
-GOOGLE_API_KEY=AIzaSyB...your_actual_key_here...
-```
-
-⚠️ **Önemli**: API key'inizi kimseyle paylaşmayın!
+3. **Token'ı Yerleştirin**
+   
+   **Windows:**
+   ```bash
+   mkdir %USERPROFILE%\.kaggle
+   copy kaggle.json %USERPROFILE%\.kaggle\
+   ```
+   
+   **Mac/Linux:**
+   ```bash
+   mkdir -p ~/.kaggle
+   cp kaggle.json ~/.kaggle/
+   chmod 600 ~/.kaggle/kaggle.json
+   ```
 
 ---
 
-## 🎬 İlk Çalıştırma
+## 📊 IMDb Dataset İndirme
 
-### Veritabanı Kurulumu
+### Otomatik İndirme
 
 ```bash
-python setup.py
+# Dataset'i indir (50K IMDb yorumu)
+python scripts/download_imdb_dataset.py
 ```
 
 Script şunları yapacak:
+- ✅ Kaggle kimlik bilgilerini kontrol eder
+- ✅ IMDb Dataset'ini indirir (~66MB)
+- ✅ Dosyaları `data/raw/` klasörüne çıkarır
 
-1. **API Key Kontrolü**
-   ```
-   ✅ API key bulundu
-   ```
+### Dataset İşleme
 
-2. **Veri Dosyası Kontrolü**
-   ```
-   ✅ 1 adet veri dosyası bulundu
-   ```
+```bash
+# CSV'yi metin dosyalarına dönüştür
+python scripts/process_imdb_dataset.py
+```
 
-3. **Onay İstemi**
-   ```
-   Devam etmek istiyor musunuz? (E/H):
-   ```
-   `E` yazıp Enter'a basın.
+Script şunları yapacak:
+1. ✅ Mevcut sample_reviews.txt'yi backup'lar
+2. ✅ CSV dosyasını okur (50,000 yorum)
+3. ✅ Her 5000 yorumu bir dosyaya böler
+4. ✅ `data/` klasörüne 10 dosya oluşturur
 
-4. **Veri İşleme**
-   ```
-   📊 ADIM 1: Veri İşleme (Chunking)
-   ✓ 50 chunk oluşturuldu
-   ```
-
-5. **Vektör Veritabanı Oluşturma**
-   ```
-   💾 ADIM 3: Vektör Veritabanı Oluşturuluyor
-   ✓ Vektör veritabanı oluşturuldu ve kaydedildi
-   ```
-
-6. **Test Sorgusu**
-   ```
-   🧪 Test Sorgusu Çalıştırılıyor...
-   Soru: Hangi filmler hakkında eleştiri var?
-   Cevap: [AI'dan gelen cevap]
-   ```
-
-✅ Başarılı! Artık uygulamayı çalıştırabilirsiniz.
+```
+data/
+├── imdb_reviews_01.txt  (5000 yorum)
+├── imdb_reviews_02.txt  (5000 yorum)
+├── ...
+└── imdb_reviews_10.txt  (5000 yorum)
+```
 
 ---
 
@@ -156,31 +173,49 @@ Script şunları yapacak:
 ### Uygulamayı Başlatın
 
 ```bash
+# Ollama servisinin çalıştığından emin olun
+ollama serve
+
+# Streamlit uygulamasını başlatın
 streamlit run app.py
 ```
 
 Tarayıcı otomatik açılacak. Açılmazsa: `http://localhost:8501`
 
+### İlk Açılış
+
+1. **Otomatik Başlatma**
+   - Uygulama açıldığında sistem otomatik olarak RAG pipeline'ı yükler
+   - `chroma_db/` varsa direkt kullanıma hazır!
+
+2. **Veritabanı Yoksa**
+   - Sol panelden "🔄 Verileri İşle / Güncelle" butonuna tıklayın
+   - Sistem tüm `.txt` dosyalarını işleyecek
+   - Vektör veritabanı oluşacak (~2-5 dakika)
+
 ### Arayüz Tanıtımı
 
 #### Sol Panel (Sidebar)
 
-**⚙️ Ayarlar**
-- **Google API Key**: API key'inizi girin (güvenlik için gizli)
-- **🚀 RAG Sistemini Başlat**: Sistemi aktif hale getirin
+**📊 Sistem Durumu**
+- 🟢 **Sistem Hazır**: Her şey çalışıyor
+- 🟡 **Yükleniyor**: Sistem başlatılıyor
+- 🔴 **Veritabanı Yok**: Verileri işleyin
+
+**🤖 Model Bilgisi**
+- Model: Ollama Phi-3 Mini
+- Vektör DB: Aktif/Pasif
 
 **📚 Veri Yönetimi**
-- **🔄 Verileri İşle**: Yeni veri eklediyseniz veritabanını güncelleyin
+- **🔄 Verileri İşle / Güncelle**: Yeni veri eklediyseniz
+- İlk kullanımda bu butona tıklayın!
 
 **💬 Sohbet**
-- **🗑️ Sohbeti Temizle**: Konuşma geçmişini sıfırlayın
-
-**📊 İstatistikler**
-- Mesaj sayısı
-- Veritabanı durumu
+- **🗑️ Sohbeti Temizle**: Konuşma geçmişini sil
+- **Mesaj Sayısı**: İstatistik
 
 **ℹ️ Hakkında**
-- Proje bilgileri
+- Teknolojiler ve bilgi
 
 #### Ana Ekran
 
@@ -190,57 +225,52 @@ Tarayıcı otomatik açılacak. Açılmazsa: `http://localhost:8501`
 
 **Soru Sorma**
 - Alt kısımdaki input alanına sorunuzu yazın
-- Enter veya ▶ butonuna basın
+- Enter'a basın
 
 **Kaynak Belgeler**
-- Her cevabın altında "📚 Kaynak Belgeler" açılır menüsü
-- Bot'un hangi kaynaklardan bilgi aldığını gösterir
+- Her cevabın altında "📚 Kaynak Belgeler"
+- Bot'un hangi film yorumlarından bilgi aldığını gösterir
 
 ### İlk Sorgunuz
 
-1. **API Key Girin**
-   - Sol panelden API key'inizi yapıştırın
-
-2. **RAG Sistemini Başlatın**
-   - "🚀 RAG Sistemini Başlat" butonuna tıklayın
-   - ✅ "RAG sistemi aktif" mesajını bekleyin
-
-3. **Soru Sorun!**
+1. **Sistem Hazır mı Kontrol Edin**
+   - Sol panelde 🟢 "Sistem Hazır" yazmalı
+   
+2. **Soru Sorun!**
    ```
-   Christopher Nolan'ın hangi filmleri hakkında eleştiri var?
+   En iyi aksiyon filmleri hangileri?
    ```
 
-4. **Cevabı İnceleyin**
-   - Bot detaylı bir cevap verecek
-   - "📚 Kaynak Belgeler" açıp kaynakları görebilirsiniz
+3. **Cevabı İnceleyin**
+   - Bot IMDb yorumlarına göre cevap verecek
+   - "📚 Kaynak Belgeler" ile kaynakları görebilirsiniz
 
 ### Örnek Sohbet Senaryosu
 
 ```
-👤 Sen: Merhaba! Bana Inception hakkında bilgi verir misin?
+👤 Sen: Merhaba! Hangi filmler çok beğenilmiş?
 
-🎬 Bot: Merhaba! Tabii ki. "Inception" (Başlangıç), Christopher 
-Nolan'ın 2010 yapımı bilim kurgu걸작... [detaylı cevap]
+🎬 Bot: Merhaba! IMDb veri setinde yüksek değerlendirme alan 
+filmler arasında [film örnekleri]... [detaylı cevap]
 
-👤 Sen: Bu filmin puanı neydi?
+👤 Sen: Korku filmi önerir misin?
 
-🎬 Bot: "Inception" film eleştirisinde 9/10 puan almıştır...
+🎬 Bot: Tabii! Korku kategorisinde şu filmler öne çıkıyor...
 
-👤 Sen: Christopher Nolan'ın başka hangi filmleri var burada?
+👤 Sen: Leonardo DiCaprio'nun iyi filmleri hangileri?
 
-🎬 Bot: Veri setimizde Christopher Nolan'ın şu filmleri bulunuyor:
-1. Inception (2010) - 9/10
-2. The Dark Knight (2008) - 9.5/10
-...
+🎬 Bot: Leonardo DiCaprio'nun oynadığı ve yüksek puan alan 
+filmler arasında...
 ```
 
 ### Kullanım İpuçları
 
 ✅ **İyi Sorular:**
-- "Hangi filmler en yüksek puan almış?"
+- "En iyi aksiyon filmleri hangileri?"
 - "Duygusal filmler önerir misin?"
-- "Parasite filminin konusu ne?"
-- "Leonardo DiCaprio'nun oynadığı filmler hangileri?"
+- "Hangi filmler pozitif yorumlar almış?"
+- "Komedi filmleri hakkında ne söyleniyor?"
+- "Korku filmi öner"
 
 ❌ **Kötü Sorular:**
 - "Bugün hava nasıl?" (veri setinde yok)
@@ -253,25 +283,26 @@ Nolan'ın 2010 yapımı bilim kurgu걸작... [detaylı cevap]
 
 ### Sık Karşılaşılan Hatalar
 
-#### 1. "GOOGLE_API_KEY bulunamadı"
+#### 1. "Ollama bağlantı hatası"
 
 **Çözüm:**
 ```bash
-# .env dosyasını kontrol edin
-notepad .env
+# Ollama servisini başlatın
+ollama serve
 
-# Şöyle görünmeli:
-GOOGLE_API_KEY=AIzaSyB...
-
-# Boşluk olmamalı, tırnak olmamalı!
+# Başka bir terminalde kontrol edin
+curl http://localhost:11434
 ```
 
 #### 2. "Vektör veritabanı bulunamadı"
 
 **Çözüm:**
 ```bash
-# Setup'ı tekrar çalıştırın
-python setup.py
+# Streamlit arayüzünden "Verileri İşle" butonuna tıklayın
+# VEYA
+# Uygulama kapalıyken chroma_db klasörünü silin:
+rmdir /s chroma_db  # Windows
+rm -rf chroma_db    # Linux/Mac
 ```
 
 #### 3. "ModuleNotFoundError"
@@ -281,7 +312,7 @@ python setup.py
 # Bağımlılıkları tekrar yükleyin
 pip install -r requirements.txt
 
-# Virtual environment aktif mi kontrol edin
+# Virtual environment aktif mi?
 # (venv) yazısı komut satırında görünmeli
 ```
 
@@ -293,12 +324,25 @@ pip install -r requirements.txt
 streamlit run app.py --server.port 8502
 ```
 
-#### 5. "API Rate Limit Exceeded"
+#### 5. "Kaggle kimlik bilgileri bulunamadı"
 
 **Çözüm:**
-- 60 saniye bekleyin (Gemini free tier limiti)
-- Daha az sık soru sorun
-- Paid plan'e geçin
+```bash
+# kaggle.json dosyasının doğru yerde olduğundan emin olun
+# Windows: C:\Users\YourUsername\.kaggle\kaggle.json
+# Linux/Mac: ~/.kaggle/kaggle.json
+
+# İçeriği kontrol edin
+cat ~/.kaggle/kaggle.json  # Linux/Mac
+type %USERPROFILE%\.kaggle\kaggle.json  # Windows
+```
+
+#### 6. "Embedding modeli indirilemiyor"
+
+**Çözüm:**
+- İnternet bağlantınızı kontrol edin
+- İlk çalıştırmada HuggingFace'den model indirilir (~80MB)
+- Proxy kullanıyorsanız ayarlarınızı kontrol edin
 
 ### Log Kontrolleri
 
@@ -308,33 +352,44 @@ Hata detaylarını görmek için:
 # Terminal çıktısını kontrol edin
 # Kırmızı HATA mesajları önemlidir
 
-# Streamlit logları
+# Streamlit debug modu
 streamlit run app.py --logger.level=debug
+
+# Ollama logları
+ollama serve --verbose
 ```
 
 ---
 
 ## ❓ Sık Sorulan Sorular
 
-### 1. API key ücretsiz mi?
+### 1. Tamamen ücretsiz mi?
 
-✅ **Evet!** Google Gemini API'nin ücretsiz bir tier'ı var:
-- 60 request/dakika
-- Günlük limit var ama genellikle yeterli
+✅ **Evet!** 
+- Ollama: Ücretsiz ve lokal
+- HuggingFace modeller: Ücretsiz
+- Kaggle API: Ücretsiz
+- ChromaDB: Ücretsiz
 
-### 2. Kendi verilerimi ekleyebilir miyim?
+**Maliyet: $0**
+
+### 2. İnternet gerekir mi?
+
+**İlk kurulumda:**
+- ✅ Model indirmek için (bir kez)
+- ✅ Kaggle dataset indirmek için (bir kez)
+
+**Kullanım sırasında:**
+- ❌ Hayır! Tamamen offline çalışır
+
+### 3. Kendi verilerimi ekleyebilir miyim?
 
 ✅ **Evet!** 
 
 ```bash
 # 1. data/ klasörüne .txt dosyanızı ekleyin
-# 2. Setup'ı tekrar çalıştırın
-python setup.py
+# 2. Streamlit'te "Verileri İşle" butonuna tıklayın
 ```
-
-### 3. İnternetsiz çalışır mı?
-
-❌ **Hayır.** Gemini API internet bağlantısı gerektirir.
 
 ### 4. Veritabanını nasıl sıfırlarım?
 
@@ -346,60 +401,79 @@ rmdir /s chroma_db
 # Mac/Linux:
 rm -rf chroma_db
 
-# Sonra tekrar oluşturun
-python setup.py
+# Streamlit'te "Verileri İşle" butonuna tıklayın
 ```
 
-### 5. Daha hızlı yanıt almak için ne yapabilirim?
+### 5. Daha hızlı yanıt için ne yapabilirim?
 
 ```python
 # src/rag_pipeline.py dosyasında:
+
 # k değerini düşürün (daha az context)
 rag.create_qa_chain(k=2)  # varsayılan 4
 
-# Temperature'ı düşürün (daha deterministik)
-temperature=0.3  # varsayılan 0.7
+# Temperature'ı düşürün
+temperature=0.5  # varsayılan 0.7
 ```
 
-### 6. Kaç film eleştirisi var?
+### 6. Kaç film yorumu var?
 
-Örnek veri setinde **13 film eleştirisi** var:
-- The Shawshank Redemption
-- The Godfather
-- Parasite
-- Inception
-- Pulp Fiction
-- Spirited Away
-- The Dark Knight
-- Amélie
-- Fight Club
-- City of God
-- Eternal Sunshine of the Spotless Mind
-- 12 Angry Men
-- Pan's Labyrinth
+**IMDb Dataset:**
+- 50,000 film yorumu
+- 25,000 pozitif
+- 25,000 negatif
+- Çeşitli film türleri
 
-### 7. Türkçe dışında dil desteği var mı?
+### 7. Başka Ollama modelleri kullanabilir miyim?
 
-✅ **Evet!** Gemini multi-lingual. İngilizce soru sorabilirsiniz:
+✅ **Evet!**
 
-```
-"What are the best rated movies in the database?"
+```python
+# src/rag_pipeline.py dosyasında model değiştirin:
+
+# Daha küçük (daha hızlı)
+model="phi3:mini"
+
+# Daha büyük (daha iyi)
+model="llama3.2:3b"
+model="gemma2:9b"
 ```
 
-### 8. Production'a nasıl deploy ederim?
+Önce modeli indirin:
+```bash
+ollama pull llama3.2:3b
+```
 
-**Streamlit Cloud (Ücretsiz):**
-1. GitHub'a push yapın
-2. [share.streamlit.io](https://share.streamlit.io)'ya gidin
-3. Repository'yi seçin
-4. Secrets'a API key ekleyin
-5. Deploy!
+### 8. CPU'da çalışır mı?
+
+✅ **Evet!** Phi-3 Mini CPU'da iyi çalışır:
+- **4GB RAM**: Yeterli
+- **8GB RAM**: İdeal
+- **CPU**: Modern herhangi bir CPU
+
+### 9. Türkçe sorular sorabilir miyim?
+
+✅ **Evet!** Ancak veri seti İngilizce:
+- Türkçe soru sorabilirsiniz
+- Bot Türkçe cevap verir
+- Ama kaynak IMDb yorumları İngilizce
+
+### 10. Production'a nasıl deploy ederim?
+
+**Docker ile:**
+```dockerfile
+# Dockerfile oluşturun
+FROM python:3.10
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["streamlit", "run", "app.py"]
+```
 
 **Alternatifler:**
-- Heroku
-- AWS
-- Google Cloud Run
-- Azure
+- Render.com
+- Railway.app
+- Kendi sunucunuz (Ollama ile)
 
 ---
 
@@ -408,9 +482,9 @@ temperature=0.3  # varsayılan 0.7
 Sorun mu yaşıyorsunuz?
 
 1. **README.md** dosyasını okuyun
-2. **GitHub Issues** kontrol edin
-3. Yeni issue açın (hata detaylarıyla)
-4. Email: your.email@example.com
+2. **Bu kılavuzu** tekrar gözden geçirin
+3. **GitHub Issues** kontrol edin
+4. Yeni issue açın (hata detaylarıyla)
 
 ---
 
@@ -420,17 +494,33 @@ Sorun mu yaşıyorsunuz?
 - [RAG Paper (Original)](https://arxiv.org/abs/2005.11401)
 - [LangChain RAG Tutorial](https://python.langchain.com/docs/use_cases/question_answering/)
 
+**Ollama:**
+- [Official Documentation](https://ollama.com/docs)
+- [Model Library](https://ollama.com/library)
+
 **Streamlit:**
 - [Official Tutorial](https://docs.streamlit.io/library/get-started)
 - [Gallery](https://streamlit.io/gallery)
 
-**Gemini API:**
-- [Google AI Documentation](https://ai.google.dev/)
-- [Cookbook](https://github.com/google-gemini/cookbook)
+**ChromaDB:**
+- [Getting Started](https://docs.trychroma.com/getting-started)
+
+---
+
+## 🎯 Sonraki Adımlar
+
+1. ✅ Kurulumu tamamladınız
+2. ✅ IMDb dataset'i yüklediniz
+3. ✅ Uygulamayı çalıştırdınız
+
+**Şimdi:**
+- 🎬 Film hakkında sorular sorun
+- 📊 Farklı türlerde filmler keşfedin
+- 🔧 Parametreleri deneyerek optimize edin
+- 📚 Kendi verilerinizi ekleyin
 
 ---
 
 **🎉 İyi kullanımlar! Keyifli film sohbetleri!**
 
 *Akbank GenAI Bootcamp 🎓*
-

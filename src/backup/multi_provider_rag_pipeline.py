@@ -10,35 +10,37 @@ os.environ['USE_TORCH'] = 'YES'
 from typing import List, Optional
 from dotenv import load_dotenv
 from langchain.schema import Document
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+from langchain_groq import ChatGroq
 from langchain_ollama import ChatOllama
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 class RAGPipeline:
-    """RAG pipeline sınıfı - FAISS vektör DB ve çeşitli LLM'ler kullanarak soru-cevap sistemi"""
+    """RAG pipeline sınıfı - ChromaDB ve çeşitli LLM'ler kullanarak soru-cevap sistemi"""
     
     def __init__(
         self, 
-        persist_directory: str = "faiss_db",
+        persist_directory: str = "chroma_db",
         model_provider: str = "ollama",
-        api_key: Optional[str] = None
+        groq_api_key: Optional[str] = None
     ):
         """
         RAG Pipeline'ı başlatır
         
         Args:
-            persist_directory: FAISS veritabanı dizini
-            model_provider: LLM sağlayıcısı ("ollama" veya "gemini")
-            api_key: API anahtarı (Gemini için gerekli, .env'den okunabilir)
+            persist_directory: ChromaDB veritabanı dizini
+            model_provider: LLM sağlayıcısı ("ollama" veya "groq")
+            groq_api_key: Groq API anahtarı (Groq kullanılacaksa)
         """
-        # .env dosyasını yükle
-        load_dotenv()
+        # API anahtarlarını yükle
+        if groq_api_key is None:
+            load_dotenv()
+            groq_api_key = os.getenv('GROQ_API_KEY')
         
+        self.groq_api_key = groq_api_key
         self.persist_directory = persist_directory
         self.model_provider = model_provider.lower()
-        self.api_key = api_key or os.getenv('GEMINI_API_KEY')
         self.embeddings = None
         self.vectorstore = None
         self.llm = None
@@ -102,26 +104,24 @@ class RAGPipeline:
                 # Ollama - Tamamen lokal, API key gerektirmez
                 self.llm = ChatOllama(
                     model="phi3:mini",  # Phi-3 Mini 3.8B
-                    temperature=0.5,  # Daha hızlı cevaplar için düşürüldü
-                    base_url="http://localhost:11434",  # Ollama varsayılan port
-                    num_predict=512  # Daha kısa cevaplar = daha hızlı
-                )
-                print("✓ Ollama - Phi-3 Mini modeli başlatıldı (LOKAL - HIZLI MOD)")
-            
-            elif self.model_provider == "gemini":
-                if not self.api_key:
-                    raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY ekleyin.")
-                
-                self.llm = ChatGoogleGenerativeAI(
-                    model="gemini-pro",  # Stable Gemini model
-                    google_api_key=self.api_key,
                     temperature=0.7,
-                    convert_system_message_to_human=True
+                    base_url="http://localhost:11434"  # Ollama varsayılan port
                 )
-                print("✓ Google Gemini Pro modeli başlatıldı 🚀")
-            
+                print("✓ Ollama - Phi-3 Mini modeli başlatıldı (LOKAL)")
+                
+            elif self.model_provider == "groq":
+                if not self.groq_api_key:
+                    raise ValueError("Groq API anahtarı bulunamadı. Groq kullanmak için API key gerekli.")
+                
+                self.llm = ChatGroq(
+                    model="llama-3.2-90b-text-preview",  # En güçlü model
+                    groq_api_key=self.groq_api_key,
+                    temperature=0.7,
+                    max_tokens=2048
+                )
+                print("✓ Groq - Llama 3.2 90B modeli başlatıldı")
             else:
-                raise ValueError(f"Desteklenmeyen model: {self.model_provider}. Sadece 'ollama' veya 'gemini' destekleniyor.")
+                raise ValueError(f"Desteklenmeyen model sağlayıcısı: {self.model_provider}. Sadece 'ollama' veya 'groq' destekleniyor.")
                 
         except Exception as e:
             raise Exception(f"LLM başlatılamadı: {str(e)}")
@@ -136,14 +136,14 @@ class RAGPipeline:
         try:
             print(f"\n📊 {len(documents)} belge vektör veritabanına ekleniyor...")
             
-            # FAISS vektör DB oluştur
-            self.vectorstore = FAISS.from_documents(
+            self.vectorstore = Chroma.from_documents(
                 documents=documents,
-                embedding=self.embeddings
+                embedding=self.embeddings,
+                persist_directory=self.persist_directory
             )
             
-            # FAISS'i kaydet
-            self.vectorstore.save_local(self.persist_directory)
+            # Veritabanını kaydet
+            self.vectorstore.persist()
             print(f"✓ Vektör veritabanı oluşturuldu ve kaydedildi: {self.persist_directory}")
             
         except Exception as e:
@@ -155,11 +155,9 @@ class RAGPipeline:
             if not os.path.exists(self.persist_directory):
                 raise FileNotFoundError(f"Vektör veritabanı bulunamadı: {self.persist_directory}")
             
-            # FAISS'i yükle
-            self.vectorstore = FAISS.load_local(
-                self.persist_directory,
-                embeddings=self.embeddings,
-                allow_dangerous_deserialization=True  # Local dosya güvenli
+            self.vectorstore = Chroma(
+                persist_directory=self.persist_directory,
+                embedding_function=self.embeddings
             )
             print("✓ Vektör veritabanı yüklendi")
             
@@ -192,7 +190,7 @@ class RAGPipeline:
                 verbose=False
             )
             
-            print(f"✓ QA zinciri oluşturuldu (k={k}) - HIZLI MOD AKTİF")
+            print(f"✓ QA zinciri oluşturuldu (k={k})")
             
         except Exception as e:
             raise Exception(f"QA zinciri oluşturulamadı: {str(e)}")
@@ -221,8 +219,8 @@ Kullanıcı Sorusu: {question}
 Lütfen cevabını Türkçe olarak ver ve mümkünse bilgi tabanındaki spesifik film örnekleriyle destekle.
 """
             
-            # Sorguyu çalıştır (invoke kullan, __call__ deprecated)
-            result = self.qa_chain.invoke({"query": enhanced_question})
+            # Sorguyu çalıştır
+            result = self.qa_chain({"query": enhanced_question})
             
             return {
                 'answer': result['result'],
@@ -269,7 +267,7 @@ def main():
         print("-" * 50)
         
         # Eğer veritabanı varsa yükle, yoksa uyarı ver
-        if os.path.exists("faiss_db"):
+        if os.path.exists("chroma_db"):
             rag.load_vectorstore()
             rag.create_qa_chain()
             
