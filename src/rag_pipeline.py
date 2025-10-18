@@ -119,16 +119,38 @@ class RAGPipeline:
             elif self.model_provider == "gemini":
                 if not self.api_key:
                     raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY ekleyin.")
-                
-                gemini_model = os.getenv('GEMINI_MODEL', 'gemini-pro')
+
+                user_model = os.getenv('GEMINI_MODEL')
                 temperature = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))
-                self.llm = ChatGoogleGenerativeAI(
-                    model=gemini_model,
-                    google_api_key=self.api_key,
-                    temperature=temperature,
-                    convert_system_message_to_human=True
-                )
-                print(f"✓ Google Gemini modeli başlatıldı: {gemini_model} 🚀")
+
+                # Sağlam model fallback sırası (v1beta uyumlu bilinen alias'lar)
+                candidate_models = [
+                    user_model if user_model else 'gemini-flash-latest',
+                    'gemini-pro-latest',
+                    'gemini-1.5-pro',
+                    'gemini-1.5-flash'
+                ]
+
+                last_error = None
+                for candidate in candidate_models:
+                    if not candidate:
+                        continue
+                    try:
+                        self.llm = ChatGoogleGenerativeAI(
+                            model=candidate,
+                            google_api_key=self.api_key,
+                            temperature=temperature,
+                            convert_system_message_to_human=True
+                        )
+                        print(f"✓ Google Gemini modeli başlatıldı: {candidate} 🚀")
+                        last_error = None
+                        break
+                    except Exception as e:
+                        last_error = e
+                        continue
+
+                if last_error is not None:
+                    raise last_error
             
             else:
                 raise ValueError(f"Desteklenmeyen model: {self.model_provider}. Sadece 'ollama', 'gemini' veya 'none' destekleniyor.")
