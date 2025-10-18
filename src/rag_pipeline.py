@@ -98,7 +98,11 @@ class RAGPipeline:
     def _initialize_llm(self):
         """LLM modelini başlatır"""
         try:
-            if self.model_provider == "ollama":
+            if self.model_provider == "none":
+                # LLM kullanılmayacak (sadece indeksleme için)
+                self.llm = None
+                print("✓ LLM devre dışı (yalnızca FAISS işlemleri)")
+            elif self.model_provider == "ollama":
                 # Ollama - Tamamen lokal, API key gerektirmez
                 ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
                 ollama_model = os.getenv('OLLAMA_MODEL', 'phi3:mini')
@@ -116,7 +120,7 @@ class RAGPipeline:
                 if not self.api_key:
                     raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY ekleyin.")
                 
-                gemini_model = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+                gemini_model = os.getenv('GEMINI_MODEL', 'gemini-pro')
                 temperature = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))
                 self.llm = ChatGoogleGenerativeAI(
                     model=gemini_model,
@@ -127,7 +131,7 @@ class RAGPipeline:
                 print(f"✓ Google Gemini modeli başlatıldı: {gemini_model} 🚀")
             
             else:
-                raise ValueError(f"Desteklenmeyen model: {self.model_provider}. Sadece 'ollama' veya 'gemini' destekleniyor.")
+                raise ValueError(f"Desteklenmeyen model: {self.model_provider}. Sadece 'ollama', 'gemini' veya 'none' destekleniyor.")
                 
         except Exception as e:
             raise Exception(f"LLM başlatılamadı: {str(e)}")
@@ -183,6 +187,8 @@ class RAGPipeline:
             raise ValueError("Önce vektör veritabanı oluşturulmalı veya yüklenmelidir")
         
         try:
+            if self.llm is None:
+                raise ValueError("LLM tanımlı değil. create_qa_chain için 'gemini' veya 'ollama' sağlayıcı kullanın.")
             # Retriever oluştur
             retriever = self.vectorstore.as_retriever(
                 search_type="similarity",
