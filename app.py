@@ -3,6 +3,8 @@ Film Gurusu Chatbot - Streamlit Web Arayüzü
 Akbank GenAI Bootcamp Projesi
 """
 import os
+import io
+from contextlib import redirect_stdout, redirect_stderr
 import streamlit as st
 from dotenv import load_dotenv
 from src.data_processor import DataProcessor
@@ -131,7 +133,9 @@ def process_data():
                 return False
             
             # Verileri işle
-            documents = processor.process_directory('data')
+            # Streamlit stdout/stderr kapalı olabilir; güvenli yönlendirme kullan
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                documents = processor.process_directory('data')
             
             if len(documents) == 0:
                 st.error("❌ İşlenecek veri bulunamadı!")
@@ -144,10 +148,13 @@ def process_data():
             rag = RAGPipeline(model_provider=st.session_state.selected_model)
             
             # Vektör veritabanı oluştur
-            rag.create_vectorstore(documents)
+            # Olası print'leri güvenli şekilde yönlendir
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                rag.create_vectorstore(documents)
             
             # QA zinciri oluştur (k=2 daha hızlı)
-            rag.create_qa_chain(k=2)
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                rag.create_qa_chain(k=2)
             
             st.session_state.rag_pipeline = rag
             st.session_state.vectorstore_loaded = True
