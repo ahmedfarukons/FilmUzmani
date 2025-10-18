@@ -1,6 +1,10 @@
 # Gemini API Key (Google AI Studio'dan alın)
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+GEMINI_TEMPERATURE=0.7
 
 # Ollama ayarları (varsayılan)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=phi3:mini
+OLLAMA_TEMPERATURE=0.5
+OLLAMA_NUM_PREDICT=512

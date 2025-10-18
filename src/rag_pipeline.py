@@ -100,25 +100,31 @@ class RAGPipeline:
         try:
             if self.model_provider == "ollama":
                 # Ollama - Tamamen lokal, API key gerektirmez
+                ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+                ollama_model = os.getenv('OLLAMA_MODEL', 'phi3:mini')
+                temperature = float(os.getenv('OLLAMA_TEMPERATURE', '0.5'))
+                num_predict = int(os.getenv('OLLAMA_NUM_PREDICT', '512'))
                 self.llm = ChatOllama(
-                    model="phi3:mini",  # Phi-3 Mini 3.8B
-                    temperature=0.5,  # Daha hızlı cevaplar için düşürüldü
-                    base_url="http://localhost:11434",  # Ollama varsayılan port
-                    num_predict=512  # Daha kısa cevaplar = daha hızlı
+                    model=ollama_model,
+                    temperature=temperature,
+                    base_url=ollama_base_url,
+                    num_predict=num_predict
                 )
-                print("✓ Ollama - Phi-3 Mini modeli başlatıldı (LOKAL - HIZLI MOD)")
+                print(f"✓ Ollama modeli başlatıldı: {ollama_model} ({ollama_base_url})")
             
             elif self.model_provider == "gemini":
                 if not self.api_key:
                     raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY ekleyin.")
                 
+                gemini_model = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+                temperature = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))
                 self.llm = ChatGoogleGenerativeAI(
-                    model="gemini-pro",  # Stable Gemini model
+                    model=gemini_model,
                     google_api_key=self.api_key,
-                    temperature=0.7,
+                    temperature=temperature,
                     convert_system_message_to_human=True
                 )
-                print("✓ Google Gemini Pro modeli başlatıldı 🚀")
+                print(f"✓ Google Gemini modeli başlatıldı: {gemini_model} 🚀")
             
             else:
                 raise ValueError(f"Desteklenmeyen model: {self.model_provider}. Sadece 'ollama' veya 'gemini' destekleniyor.")
