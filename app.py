@@ -145,7 +145,8 @@ def process_data():
             
         with st.spinner("🔨 Vektör veritabanı oluşturuluyor..."):
             # RAG pipeline oluştur (seçili model ile)
-            rag = RAGPipeline(model_provider=st.session_state.selected_model)
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                rag = RAGPipeline(model_provider=st.session_state.selected_model)
             
             # Vektör veritabanı oluştur
             # Olası print'leri güvenli şekilde yönlendir
