@@ -11,12 +11,8 @@ import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
-# Windows için UTF-8 encoding ayarla
-if sys.platform == 'win32':
-    if hasattr(sys.stdout, 'buffer'):
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    if hasattr(sys.stderr, 'buffer'):
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+# Not: Streamlit ortamında stdout/stderr'i yeniden sarmalamak I/O hatalarına yol açabilir.
+# Bu nedenle Windows'ta da varsayılan akışları olduğu gibi bırakıyoruz.
 
 
 class DataProcessor:
