@@ -6,6 +6,8 @@ import os
 import sys
 import io
 from typing import List
+import json
+import pandas as pd
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
@@ -114,7 +116,7 @@ class DataProcessor:
     
     def process_directory(self, directory_path: str) -> List[Document]:
         """
-        Bir dizindeki tüm metin dosyalarını işler
+        Bir dizindeki .txt, .csv, .json dosyalarını işler
         
         Args:
             directory_path: Dizin yolu
@@ -127,15 +129,140 @@ class DataProcessor:
         if not os.path.exists(directory_path):
             raise FileNotFoundError(f"Dizin bulunamadı: {directory_path}")
         
-        # Dizindeki tüm .txt dosyalarını işle
+        # Dizindeki desteklenen dosyaları işle
         for filename in os.listdir(directory_path):
-            if filename.endswith('.txt'):
-                file_path = os.path.join(directory_path, filename)
-                documents = self.process_review_file(file_path)
-                all_documents.extend(documents)
+            file_path = os.path.join(directory_path, filename)
+            lower = filename.lower()
+            try:
+                if lower.endswith('.txt'):
+                    documents = self.process_review_file(file_path)
+                    all_documents.extend(documents)
+                elif lower.endswith('.csv'):
+                    documents = self.process_csv_file(file_path)
+                    all_documents.extend(documents)
+                elif lower.endswith('.json') or lower.endswith('.jsonl'):
+                    documents = self.process_json_file(file_path)
+                    all_documents.extend(documents)
+            except Exception as e:
+                print(f"Dosya atlandı (hata): {filename} -> {str(e)}")
         
         print(f"\n✓ Toplam {len(all_documents)} chunk oluşturuldu")
         return all_documents
+
+    # --- Kaggle/donanımlı yükleyiciler ---
+
+    def _infer_text_columns(self, df: pd.DataFrame) -> List[str]:
+        """
+        Kaggle veri setlerinde sık görülen metin sütunlarını sezgisel olarak belirler.
+        """
+        candidate_names = [
+            'review', 'review_text', 'text', 'content', 'comment', 'plot', 'summary',
+            'overview', 'description', 'body'
+        ]
+        found = [col for col in df.columns if col.lower() in candidate_names]
+        if found:
+            return found
+        # Tipi string olan uzun metin sütunlarını sezgisel seç
+        text_like = []
+        for col in df.columns:
+            series = df[col]
+            if series.dtype == object:
+                # Ortalama uzunluk kontrolü
+                try:
+                    sample = series.dropna().astype(str).head(50).tolist()
+                    avg_len = sum(len(s) for s in sample) / max(1, len(sample))
+                    if avg_len > 50:
+                        text_like.append(col)
+                except Exception:
+                    continue
+        return text_like[:2] if text_like else []
+
+    def _compose_record_text(self, row: dict, text_cols: List[str], title_cols: List[str]) -> str:
+        parts = []
+        title = None
+        for tcol in title_cols:
+            if tcol in row and isinstance(row[tcol], str) and row[tcol].strip():
+                title = row[tcol].strip()
+                break
+        if title:
+            parts.append(f"Başlık: {title}")
+        for col in text_cols:
+            if col in row and isinstance(row[col], str) and row[col].strip():
+                parts.append(row[col].strip())
+        if not parts:
+            # Fallback: tüm string alanları birleştir
+            parts = [str(v) for v in row.values() if isinstance(v, str) and v.strip()]
+        return "\n\n".join(parts)
+
+    def process_csv_file(self, file_path: str) -> List[Document]:
+        """
+        CSV dosyasını yükler ve metin alanlarını chunk'lara böler.
+        """
+        df = pd.read_csv(file_path)
+        # Başlık benzeri sütunlar
+        title_candidates = ['title', 'movie', 'movie_title', 'film', 'name']
+        title_cols = [c for c in df.columns if c.lower() in title_candidates]
+        text_cols = self._infer_text_columns(df)
+
+        documents: List[Document] = []
+        for idx, row in df.iterrows():
+            text = self._compose_record_text(row, text_cols, title_cols)
+            if not text:
+                continue
+            meta = {
+                'source': file_path,
+                'type': 'csv_record',
+                'row_index': int(idx)
+            }
+            # Satırı chunk'la
+            documents.extend(self.split_into_chunks(text, meta))
+        print(f"✓ CSV işlendi: {file_path} -> {len(documents)} chunk")
+        return documents
+
+    def process_json_file(self, file_path: str) -> List[Document]:
+        """
+        JSON veya JSONL dosyasını yükler ve metin alanlarını chunk'lara böler.
+        """
+        records: List[dict] = []
+        with open(file_path, 'r', encoding='utf-8') as f:
+            first = f.read(1)
+            f.seek(0)
+            if first == '[':
+                # JSON array
+                records = json.load(f)
+            else:
+                # JSONL
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        records.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+
+        if not records:
+            return []
+
+        df = pd.DataFrame(records)
+        title_candidates = ['title', 'movie', 'movie_title', 'film', 'name']
+        title_cols = [c for c in df.columns if c.lower() in title_candidates]
+        text_cols = self._infer_text_columns(df)
+
+        documents: List[Document] = []
+        for idx, row in df.iterrows():
+            row_dict = row.to_dict()
+            text = self._compose_record_text(row_dict, text_cols, title_cols)
+            if not text:
+                continue
+            meta = {
+                'source': file_path,
+                'type': 'json_record',
+                'row_index': int(idx)
+            }
+            documents.extend(self.split_into_chunks(text, meta))
+        print(f"✓ JSON işlendi: {file_path} -> {len(documents)} chunk")
+        return documents
 
 
 def main():
