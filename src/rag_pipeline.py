@@ -38,7 +38,12 @@ class RAGPipeline:
         
         self.persist_directory = persist_directory
         self.model_provider = model_provider.lower()
-        self.api_key = api_key or os.getenv('GEMINI_API_KEY')
+        # Accept both GEMINI_API_KEY and GOOGLE_API_KEY for compatibility
+        self.api_key = (
+            api_key
+            or os.getenv('GEMINI_API_KEY')
+            or os.getenv('GOOGLE_API_KEY')
+        )
         self.embeddings = None
         self.vectorstore = None
         self.llm = None
@@ -118,7 +123,7 @@ class RAGPipeline:
             
             elif self.model_provider == "gemini":
                 if not self.api_key:
-                    raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY ekleyin.")
+                    raise ValueError("Gemini API anahtarı bulunamadı. .env dosyasına GEMINI_API_KEY veya GOOGLE_API_KEY ekleyin.")
 
                 user_model = os.getenv('GEMINI_MODEL')
                 temperature = float(os.getenv('GEMINI_TEMPERATURE', '0.7'))

@@ -12,8 +12,8 @@ from src.rag_pipeline import RAGPipeline
 
 # Sayfa yapılandırması
 st.set_page_config(
-    page_title="🎬 Film Uzmani",
-    page_icon="🎬",
+    page_title="Film Uzmani",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -123,13 +123,13 @@ def auto_initialize_system():
 def process_data():
     """Veri işleme ve vektör veritabanı oluşturma"""
     try:
-        with st.spinner("📊 Veriler işleniyor..."):
+        with st.spinner("Veriler işleniyor..."):
             # Data processor oluştur
             processor = DataProcessor(chunk_size=1000, chunk_overlap=200)
             
             # Veri dizinini kontrol et
             if not os.path.exists('data'):
-                st.error("❌ 'data' klasörü bulunamadı!")
+                st.error("'data' klasörü bulunamadı!")
                 return False
             
             # Verileri işle
@@ -138,12 +138,12 @@ def process_data():
                 documents = processor.process_directory('data')
             
             if len(documents) == 0:
-                st.error("❌ İşlenecek veri bulunamadı!")
+                st.error("İşlenecek veri bulunamadı!")
                 return False
             
-            st.info(f"📄 {len(documents)} chunk oluşturuldu")
+            st.info(f"{len(documents)} chunk oluşturuldu")
             
-        with st.spinner("🔨 Vektör veritabanı oluşturuluyor..."):
+        with st.spinner("Vektör veritabanı oluşturuluyor..."):
             # RAG pipeline oluştur (seçili model ile)
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 rag = RAGPipeline(model_provider=st.session_state.selected_model)
@@ -161,11 +161,11 @@ def process_data():
             st.session_state.vectorstore_loaded = True
             st.session_state.system_ready = True
             
-            st.success(f"✅ Vektör veritabanı başarıyla oluşturuldu! ({len(documents)} chunk)")
+            st.success(f"Vektör veritabanı başarıyla oluşturuldu ({len(documents)} chunk)")
             return True
             
     except Exception as e:
-        st.error(f"❌ Veri işleme hatası: {str(e)}")
+        st.error(f"Veri işleme hatası: {str(e)}")
         return False
 
 
@@ -174,14 +174,14 @@ def display_chat_message(role: str, content: str):
     if role == "user":
         st.markdown(f"""
         <div class="chat-message user-message">
-            <strong>👤 Sen:</strong><br>
+            <strong>Sen:</strong><br>
             {content}
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
         <div class="chat-message bot-message">
-            <strong>🎬 Film Gurusu:</strong><br>
+            <strong>Film Uzmani:</strong><br>
             {content}
         </div>
         """, unsafe_allow_html=True)
@@ -195,19 +195,19 @@ def main():
     # Otomatik sistem başlatma
     auto_initialize_system()
     
-    # Başlık
-    st.markdown("<h1>🎬 Film Gurusu</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>RAG Tabanlı Film Eleştiri Chatbot'u - Tamamen Lokal</p>", unsafe_allow_html=True)
+    # Başlık (sadece burada emoji kalsın)
+    st.markdown("<h1>🎬 Film Uzmani</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>RAG Tabanlı Film Eleştiri Chatbot'u</p>", unsafe_allow_html=True)
     
     # Sidebar - Kontrol Paneli
     with st.sidebar:
-        st.header("🤖 Model Seçimi")
+        st.header("Model Seçimi")
         
         # Model seçici
         new_model = st.radio(
             "LLM Modeli:",
             options=["gemini", "ollama"],
-            format_func=lambda x: "🚀 Gemini 1.5 Flash (Hızlı)" if x == "gemini" else "🏠 Ollama Phi-3 (Lokal)",
+            format_func=lambda x: "Gemini 1.5 Flash (Hızlı)" if x == "gemini" else "Ollama Phi-3 (Lokal)",
             index=0 if st.session_state.selected_model == "gemini" else 1,
             help="Gemini: Hızlı ve güçlü (API key gerekli)\nOllama: Tamamen lokal (yavaş olabilir)"
         )
@@ -218,52 +218,47 @@ def main():
             st.session_state.vectorstore_loaded = False
             st.session_state.system_ready = False
             st.session_state.rag_pipeline = None
-            st.info("🔄 Model değişti, sistem yeniden başlatılıyor...")
+            st.info("Model değişti, sistem yeniden başlatılıyor...")
             st.rerun()
         
-        # API key kontrolü (sadece Gemini için)
+        # API key kontrolü (sadece Gemini için) - gizli (video için uyarı yok)
         if st.session_state.selected_model == "gemini":
             load_dotenv()
-            gemini_key = os.getenv('GEMINI_API_KEY')
-            if not gemini_key:
-                st.error("⚠️ GEMINI_API_KEY bulunamadı!")
-                st.info("📝 .env dosyasına ekleyin:\n```\nGEMINI_API_KEY=your_key_here\n```")
-            else:
-                st.success("✅ API Key: " + gemini_key[:8] + "...")
+            _ = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
         
         st.divider()
         
-        st.header("📊 Sistem Durumu")
+        st.header("Sistem Durumu")
         
         # Sistem durumu göstergesi
         if st.session_state.system_ready and st.session_state.vectorstore_loaded:
-            st.success("🟢 **Sistem Hazır**")
+            st.success("Sistem Hazır")
             model_name = "Gemini 1.5 Flash" if st.session_state.selected_model == "gemini" else "Ollama Phi-3 Mini"
-            st.info(f"🤖 **Model:** {model_name}\n💾 **Vektör DB:** FAISS (Aktif)")
+            st.info(f"Model: {model_name}\nVektör DB: FAISS (Aktif)")
         elif os.path.exists("faiss_db") and not st.session_state.vectorstore_loaded:
-            st.warning("🟡 **Yükleniyor...**")
-            if st.button("🔄 Yeniden Yükle"):
+            st.warning("Yükleniyor...")
+            if st.button("Yeniden Yükle"):
                 st.session_state.vectorstore_loaded = False
                 st.rerun()
         else:
-            st.error("🔴 **Veritabanı Yok**")
-            st.info("💡 Önce verileri işleyin")
+            st.error("Veritabanı Yok")
+            st.info("Önce verileri işleyin")
         
         st.divider()
         
         # Veri İşleme
-        st.header("📚 Veri Yönetimi")
-        if st.button("🔄 Verileri İşle / Güncelle"):
+        st.header("Veri Yönetimi")
+        if st.button("Verileri İşle / Güncelle"):
             if process_data():
                 st.rerun()
         
-        st.caption("💡 Yeni veri eklediyseniz bu butona tıklayın")
+        st.caption("Yeni veri eklediyseniz bu butona tıklayın")
         
         st.divider()
         
         # Sohbet Kontrolü
-        st.header("💬 Sohbet")
-        if st.button("🗑️ Sohbeti Temizle"):
+        st.header("Sohbet")
+        if st.button("Sohbeti Temizle"):
             st.session_state.messages = []
             st.rerun()
         
@@ -272,21 +267,21 @@ def main():
         st.divider()
         
         # Hakkında
-        st.header("ℹ️ Hakkında")
+        st.header("Hakkında")
         st.markdown("""
-        **Film Gurusu Chatbot**
+        **Film Uzmani Chatbot**
         
         RAG teknolojisiyle film eleştirileri 
         üzerine sorularınızı yanıtlar.
         
         **Teknolojiler:**
-        - 🤖 Gemini / Ollama
-        - 🔗 LangChain
-        - 💾 FAISS Vektör DB
-        - 🎨 Streamlit
-        - 🧠 Transformers Embeddings
+        - Gemini / Ollama
+        - LangChain
+        - FAISS Vektör DB
+        - Streamlit
+        - Transformers Embeddings
         
-        **Hybrid Model Desteği!**
+        **Hybrid Model Desteği**
         
         ---
         *Akbank GenAI Bootcamp*
@@ -294,11 +289,11 @@ def main():
     
     # Ana içerik - Chat arayüzü
     if not st.session_state.vectorstore_loaded:
-        st.warning("⚠️ Vektör veritabanı bulunamadı!")
-        st.info("💡 Sol panelden '🔄 Verileri İşle / Güncelle' butonuna tıklayın.")
+        st.warning("Vektör veritabanı bulunamadı!")
+        st.info("Sol panelden 'Verileri İşle / Güncelle' butonuna tıklayın.")
         
         # Örnek sorular göster
-        st.subheader("💡 Hazır Olunca Sorabilecekleriniz:")
+        st.subheader("Hazır Olunca Sorabilecekleriniz:")
         example_questions = [
             "Christopher Nolan'ın hangi filmleri hakkında eleştiri var?",
             "En iyi puan alan filmler hangileri?",
@@ -316,7 +311,7 @@ def main():
             display_chat_message(message["role"], message["content"])
         
         # Kullanıcı girişi
-        user_question = st.chat_input("Film hakkında bir şey sor... 🎬")
+        user_question = st.chat_input("Film hakkında bir şey sor...")
         
         if user_question:
             # Kullanıcı mesajını ekle
@@ -329,7 +324,7 @@ def main():
             display_chat_message("user", user_question)
             
             # Bot cevabını al
-            with st.spinner("🤔 Düşünüyorum..."):
+            with st.spinner("Düşünüyorum..."):
                 try:
                     result = st.session_state.rag_pipeline.query(user_question)
                     bot_response = result['answer']
@@ -345,7 +340,7 @@ def main():
                     
                     # Kaynak belgeleri göster (expander içinde)
                     if result['source_documents']:
-                        with st.expander("📚 Kaynak Belgeler"):
+                        with st.expander("Kaynak Belgeler"):
                             for i, doc in enumerate(result['source_documents'], 1):
                                 st.markdown(f"**Kaynak {i}:**")
                                 st.text(doc.page_content[:300] + "...")

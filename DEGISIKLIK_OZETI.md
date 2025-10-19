@@ -286,3 +286,4 @@ Proje başarıyla **tamamen lokal, offline çalışan, kullanıcı dostu** bir s
 *Tarih: 17 Ekim 2025*
 
 
+

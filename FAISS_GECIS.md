@@ -64,3 +64,4 @@ ChromaDB versiyon sorunları çözüldü! Artık FAISS ile daha stabil ve hızl�
 *Not: Eski ChromaDB verileri silinmişti zaten, yeni FAISS DB'yi "Verileri İşle" butonu ile oluşturun.*
 
 
+

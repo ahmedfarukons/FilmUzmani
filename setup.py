@@ -18,11 +18,13 @@ if sys.platform == 'win32':
 def check_api_key():
     """API key kontrolü yapar"""
     load_dotenv()
-    api_key = os.getenv('GOOGLE_API_KEY')
+    api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
     
     if not api_key:
-        print("❌ GOOGLE_API_KEY bulunamadı!")
+        print("❌ GEMINI_API_KEY / GOOGLE_API_KEY bulunamadı!")
         print("\n📝 Lütfen .env dosyası oluşturun ve API key'inizi ekleyin:")
+        print("   GEMINI_API_KEY=your_api_key_here")
+        print("   # veya")
         print("   GOOGLE_API_KEY=your_api_key_here")
         return None
     
