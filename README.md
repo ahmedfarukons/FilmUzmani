@@ -36,14 +36,32 @@ python -m streamlit run app.py
 ```
 
 ### 🖼️ Ekran Görüntüsü
-![Uygulama Ekranı](assets/screenshot.png)
+<p align="center">
+  <img src="assets/screenshot.png" alt="Uygulama Ekranı" width="100%" />
+  <br/>
+  <em>Film Uzmani - Uygulama ekranı</em>
+  <br/>
+  <br/>
+  <a href="assets/screenshot.png">Tam boyutlu görüntü</a>
+  ·
+  <a href="#-demo-video">Videoyu izle</a>
+  ·
+  <a href="#-veri-kaynağı">Veri kaynağı</a>
+  
+</p>
 
 ### 🗂️ Veri Kaynağı
 - [IMDb 50K Movie Reviews – Kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
 - Bu proje, söz konusu veri setinden türetilen `data/imdb_50k_reviews.txt` dosyasını kullanır.
 
 ### 🎥 Demo Video
-- [YouTube Demo](https://youtu.be/9-0L8U61Pjc)
+<p id="demo-video" align="center">
+  <a href="https://youtu.be/9-0L8U61Pjc" target="_blank">
+    <img src="https://img.youtube.com/vi/9-0L8U61Pjc/maxresdefault.jpg" alt="YouTube Demo" width="100%" />
+  </a>
+  <br/>
+  <em>İzlemek için görsele tıklayın</em>
+</p>
 
 ### 📖 Kullanım Kılavuzu (Özet)
 1) Sol panel → “Verileri İşle / Güncelle” ile FAISS oluşturun/güncelleyin.
@@ -85,14 +103,29 @@ python -m streamlit run app.py
 ```
 
 ### 🖼️ Screenshot
-![App Screenshot](assets/screenshot.png)
+<p align="center">
+  <img src="assets/screenshot.png" alt="App Screenshot" width="100%" />
+  <br/>
+  <em>Film Uzmani - App screen</em>
+  <br/>
+  <br/>
+  <a href="assets/screenshot.png">Open full size</a>
+  ·
+  <a href="#-demo-video-1">Watch the demo</a>
+</p>
 
 ### 🗂️ Dataset Source
 - [IMDb 50K Movie Reviews – Kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
 - The app uses a derived file `data/imdb_50k_reviews.txt` built from that dataset.
 
 ### 🎥 Demo Video
-- [YouTube Demo](https://youtu.be/9-0L8U61Pjc)
+<p id="demo-video-1" align="center">
+  <a href="https://youtu.be/9-0L8U61Pjc" target="_blank">
+    <img src="https://img.youtube.com/vi/9-0L8U61Pjc/maxresdefault.jpg" alt="YouTube Demo" width="100%" />
+  </a>
+  <br/>
+  <em>Click the image to watch</em>
+</p>
 
 ### 📖 User Guide (Quick)
 1) Sidebar → “Process / Update Data” to build/update FAISS.
