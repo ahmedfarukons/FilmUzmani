@@ -35,10 +35,6 @@ GEMINI_API_KEY=...  # veya GOOGLE_API_KEY
 python -m streamlit run app.py
 ```
 
-### 🖼️ Ekran Görüntüsü
-<p align="center">
-  <img src="assets/screenshot.png" alt="Uygulama Ekranı" width="100%" />
-</p>
 
 ### 🗂️ Veri Kaynağı
 - [IMDb 50K Movie Reviews – Kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
@@ -92,10 +88,6 @@ ollama pull phi3:mini
 python -m streamlit run app.py
 ```
 
-### 🖼️ Screenshot
-<p align="center">
-  <img src="assets/screenshot.png" alt="App Screenshot" width="100%" />
-</p>
 
 ### 🗂️ Dataset Source
 - [IMDb 50K Movie Reviews – Kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
