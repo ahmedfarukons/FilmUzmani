@@ -38,16 +38,6 @@ python -m streamlit run app.py
 ### 🖼️ Ekran Görüntüsü
 <p align="center">
   <img src="assets/screenshot.png" alt="Uygulama Ekranı" width="100%" />
-  <br/>
-  <em>Film Uzmani - Uygulama ekranı</em>
-  <br/>
-  <br/>
-  <a href="assets/screenshot.png">Tam boyutlu görüntü</a>
-  ·
-  <a href="#-demo-video">Videoyu izle</a>
-  ·
-  <a href="#-veri-kaynağı">Veri kaynağı</a>
-  
 </p>
 
 ### 🗂️ Veri Kaynağı
@@ -105,13 +95,6 @@ python -m streamlit run app.py
 ### 🖼️ Screenshot
 <p align="center">
   <img src="assets/screenshot.png" alt="App Screenshot" width="100%" />
-  <br/>
-  <em>Film Uzmani - App screen</em>
-  <br/>
-  <br/>
-  <a href="assets/screenshot.png">Open full size</a>
-  ·
-  <a href="#-demo-video-1">Watch the demo</a>
 </p>
 
 ### 🗂️ Dataset Source
