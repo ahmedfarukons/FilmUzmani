@@ -95,7 +95,7 @@ def auto_initialize_system():
             # Seçili modelle RAG başlat
             rag = RAGPipeline(model_provider=st.session_state.selected_model)
             rag.load_vectorstore()
-            rag.create_qa_chain(k=2)  # Daha hızlı için 2
+            rag.create_qa_chain(k=6)
             st.session_state.rag_pipeline = rag
             st.session_state.vectorstore_loaded = True
             st.session_state.system_ready = True
@@ -105,7 +105,7 @@ def auto_initialize_system():
             try:
                 rag = RAGPipeline(model_provider="ollama")
                 rag.load_vectorstore()
-                rag.create_qa_chain(k=2)
+                rag.create_qa_chain(k=6)
                 st.session_state.rag_pipeline = rag
                 st.session_state.vectorstore_loaded = True
                 st.session_state.system_ready = True
@@ -262,6 +262,22 @@ def main():
             st.session_state.messages = []
             st.rerun()
         
+        # Benzersiz film sayısı (metadata.title varsa tahmin)
+        unique_titles = 0
+        try:
+            if st.session_state.rag_pipeline and st.session_state.rag_pipeline.vectorstore:
+                ds = getattr(st.session_state.rag_pipeline.vectorstore, 'docstore', None)
+                store = getattr(ds, '_dict', {}) if ds else {}
+                titles = set()
+                for v in store.values():
+                    meta = getattr(v, 'metadata', {})
+                    t = meta.get('title')
+                    if t:
+                        titles.add(t)
+                unique_titles = len(titles)
+        except Exception:
+            unique_titles = 0
+        st.metric("Benzersiz Film (tahmini)", unique_titles)
         st.metric("Mesaj Sayısı", len(st.session_state.messages))
         
         st.divider()

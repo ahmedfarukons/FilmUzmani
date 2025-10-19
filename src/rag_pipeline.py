@@ -216,10 +216,15 @@ class RAGPipeline:
         try:
             if self.llm is None:
                 raise ValueError("LLM tanımlı değil. create_qa_chain için 'gemini' veya 'ollama' sağlayıcı kullanın.")
-            # Retriever oluştur
+            # Retriever oluştur (MMR ile daha çeşitli sonuçlar)
+            fetch_k = max(k * 4, 20)
             retriever = self.vectorstore.as_retriever(
-                search_type="similarity",
-                search_kwargs={"k": k}
+                search_type="mmr",
+                search_kwargs={
+                    "k": k,
+                    "fetch_k": fetch_k,
+                    "lambda_mult": 0.5
+                }
             )
             
             # QA zinciri oluştur
@@ -231,7 +236,7 @@ class RAGPipeline:
                 verbose=False
             )
             
-            print(f"✓ QA zinciri oluşturuldu (k={k}) - HIZLI MOD AKTİF")
+            print(f"✓ QA zinciri oluşturuldu (k={k}, MMR fetch_k={fetch_k}) - ÇEŞİTLİ GETİRME AKTİF")
             
         except Exception as e:
             raise Exception(f"QA zinciri oluşturulamadı: {str(e)}")
@@ -257,7 +262,8 @@ kullanıcının sorusuna detaylı, bilgilendirici ve dostça bir şekilde cevap 
 
 Kullanıcı Sorusu: {question}
 
-Lütfen cevabını Türkçe olarak ver ve mümkünse bilgi tabanındaki spesifik film örnekleriyle destekle.
+Gerektiğinde en az 3 farklı filmden örnek ver ve aynı filmin tekrarı yerine
+çeşitliliği artır. Mümkünse film adlarını açıkça belirt.
 """
             
             # Sorguyu çalıştır (invoke kullan, __call__ deprecated)

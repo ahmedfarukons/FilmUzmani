@@ -205,11 +205,23 @@ class DataProcessor:
             text = self._compose_record_text(row, text_cols, title_cols)
             if not text:
                 continue
+            # Satırdan başlık al (varsa)
+            title_value = None
+            for tcol in title_cols:
+                try:
+                    val = row[tcol]
+                except Exception:
+                    val = None
+                if isinstance(val, str) and val.strip():
+                    title_value = val.strip()
+                    break
             meta = {
                 'source': file_path,
                 'type': 'csv_record',
                 'row_index': int(idx)
             }
+            if title_value:
+                meta['title'] = title_value
             # Satırı chunk'la
             documents.extend(self.split_into_chunks(text, meta))
         print(f"✓ CSV işlendi: {file_path} -> {len(documents)} chunk")
@@ -251,11 +263,20 @@ class DataProcessor:
             text = self._compose_record_text(row_dict, text_cols, title_cols)
             if not text:
                 continue
+            # Satırdan başlık al (varsa)
+            title_value = None
+            for tcol in title_cols:
+                val = row_dict.get(tcol)
+                if isinstance(val, str) and val.strip():
+                    title_value = val.strip()
+                    break
             meta = {
                 'source': file_path,
                 'type': 'json_record',
                 'row_index': int(idx)
             }
+            if title_value:
+                meta['title'] = title_value
             documents.extend(self.split_into_chunks(text, meta))
         print(f"✓ JSON işlendi: {file_path} -> {len(documents)} chunk")
         return documents
